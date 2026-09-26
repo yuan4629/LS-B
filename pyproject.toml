@@ -9,7 +9,7 @@ description = "Brain-guided shared/specific adapter-layer allocation for continu
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-authors = [{ name = "The LS-B Authors" }]
+authors = [{ name = "Anonymous Authors" }]
 requires-python = ">=3.12"
 # Core: continual-learning runs with BiLoRA (fixed-rule allocations, tests).
 # Exact versions used for the paper are in constraints.txt.
@@ -41,9 +41,6 @@ dev = [
   "pytest",
   "ruff",
 ]
-
-[project.urls]
-Repository = "https://github.com/yuan4629/LS-B"
 
 [tool.setuptools]
 py-modules = ["exp", "analyze_d2_split", "make_inr_split"]

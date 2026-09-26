@@ -3,7 +3,6 @@ message: "If you use this code, please cite it as below."
 title: "LS-B: code for brain-guided layer specialization in continual learning"
 type: software
 authors:
-  - name: "The LS-B Authors"
+  - name: "Anonymous Authors"
 license: MIT
 version: 0.1.0
-repository-code: "https://github.com/yuan4629/LS-B"
