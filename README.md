@@ -68,4 +68,7 @@ Set `ALLOW_ENV_DRIFT=1` to run anyway; a warning is printed.
 
 ## License
 
-MIT (see `LICENSE`). Code fetched by `scripts/fetch_third_party.sh` keeps its own license.
+MIT (see `LICENSE`). The code that `scripts/fetch_third_party.sh` downloads
+(`baselines/BiLoRA/` and `brainnet/`) is not part of this repository and keeps its own license.
+`third_party/brainnet_plmodel.patch` modifies CC BY-NC licensed code and is distributed under
+the terms of that code, not under the MIT license; see `third_party/README.md`.

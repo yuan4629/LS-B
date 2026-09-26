@@ -19,8 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-The files that scripts/fetch_third_party.sh downloads (baselines/BiLoRA/ and
-brainnet/) are not part of this repository and are not covered by this license.
-third_party/brainnet_plmodel.patch modifies CC BY-NC licensed code and is
-distributed under the terms of that code; see third_party/README.md.
