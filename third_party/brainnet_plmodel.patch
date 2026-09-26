@@ -1,0 +1,102 @@
+Patch for brainnet/plmodel.py of Brain Decodes Deep Nets (commit 8f16e48).
+The patched code is licensed CC BY-NC by its authors; this patch is distributed
+under the same terms. Apply with scripts/fetch_third_party.sh.
+
+--- a/brainnet/plmodel.py
++++ b/brainnet/plmodel.py
+@@ -1,4 +1,5 @@
+ import logging
++import warnings
+ from einops import rearrange
+ import numpy as np
+ import pytorch_lightning as pl
+@@ -7,12 +8,22 @@
+ from torchmetrics import R2Score
+ from brainnet.coords import load_coords
+ from brainnet.dataset import BrainDataset
+-from brainnet.plot_utils import make_training_plot
+ from brainnet.roi import nsdgeneral_indices
+ from brainnet.model import FactorTopy
+ import matplotlib.pyplot as plt
+ 
+-import cortex
++# cortex (pycortex) and brainnet.plot_utils are only needed for visualisation (draw=True);
++# they are imported lazily so that training / atlas extraction with draw=False does not
++# require the heavy plotting dependencies.
++
++
++def _make_r2score(n_outputs):
++    """Multi-output R2Score across torchmetrics versions: old releases take num_outputs,
++    torchmetrics>=1.x infers it on the first update and rejects the keyword."""
++    try:
++        return R2Score(num_outputs=n_outputs, multioutput="raw_values")
++    except (TypeError, ValueError):
++        return R2Score(multioutput="raw_values")
+ 
+ 
+ class PLModel(pl.LightningModule):
+@@ -50,16 +61,22 @@
+             self.cached_local_tokens = {}
+             self.cached_global_tokens = {}
+ 
+-        # metric
+-        self.train_r2 = R2Score(num_outputs=self.n_vertices, multioutput="raw_values")
+-        self.val_r2 = R2Score(num_outputs=self.n_vertices, multioutput="raw_values")
++        # metric (see _make_r2score for torchmetrics compatibility)
++        self.train_r2 = _make_r2score(self.n_vertices)
++        self.val_r2 = _make_r2score(self.n_vertices)
+ 
+         self.logged_train_r2 = []
+         self.logged_val_r2 = []
+ 
+-        cortex.download_subject(subject_id="fsaverage")
++        # The fsaverage subject is only needed for flatmap visualisation.
++        if self.draw:
++            try:
++                import cortex
++                cortex.download_subject(subject_id="fsaverage")
++            except Exception as e:
++                warnings.warn(f"[PLModel] cortex.download_subject skipped (visualisation only): {e}")
+ 
+-    def forward(self, x):
++    def forward(self, x):#image --backbone_vm--> feat --downsample--> (local, global, coords) --FactorTopy--> fmri value(y)
+         with torch.no_grad():
+             if self.cached:
+                 local_tokens, global_tokens = self.cached_forward(x)
+@@ -117,7 +134,7 @@
+         return local_tokens, global_tokens
+ 
+     def training_step(self, batch, batch_idx):
+-        x, y = batch
++        x, y = batch#image x: [B, 3, 224, 224]; fmri value y: [B, N]
+         y_hat, reg = self(x)
+         self.train_r2.update(y_hat, y)
+         loss = nn.functional.smooth_l1_loss(y_hat, y, beta=0.1)
+@@ -170,15 +187,23 @@
+ 
+     @torch.no_grad()
+     def on_fit_end(self):
+-        print("on_fit_end: running clustering channels")
+         sel_space, sel_layer, sel_scale = self.get_selectors()
+-        channel_clustering_dict, sel_channel = self.get_channel_clustering()
+-        self.channel_clustering_dict = channel_clustering_dict
+-        self.sel_channel = sel_channel
+         self.sel_space = sel_space
+         self.sel_layer = sel_layer
+         self.sel_scale = sel_scale
++        # Channel clustering only feeds the visualisation (sel_channel). It runs a large GPU
++        # k-means and its "exactly 20 clusters" loop can oscillate for hours, while atlas
++        # extraction does not read its outputs, so it is skipped when draw=False.
++        self.channel_clustering_dict = None
++        self.sel_channel = None
++        if not self.draw:
++            print("on_fit_end: skip channel clustering (draw=False)")
++            return
+ 
++        print("on_fit_end: running clustering channels")
++        channel_clustering_dict, sel_channel = self.get_channel_clustering()
++        self.channel_clustering_dict = channel_clustering_dict
++        self.sel_channel = sel_channel
+         if self.draw:
+             from brainnet.plot_utils import make_brainnet_plot
+ 

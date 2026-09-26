@@ -1,0 +1,25 @@
+# Versions used for the experiments in the paper (Python 3.13.13, CUDA 13.0 build of torch).
+# Use with: pip install -c constraints.txt ...
+# On CPU-only machines install torch/torchvision from https://download.pytorch.org/whl/cpu;
+# the local version label (+cpu / +cu130) is ignored by '=='.
+torch==2.12.0
+torchvision==0.27.0
+timm==1.0.27
+numpy==2.4.6
+einops==0.8.2
+scipy==1.17.1
+scikit-learn==1.9.0
+PyYAML==6.0.3
+tqdm==4.67.3
+pillow==12.2.0
+matplotlib==3.10.9
+ipdb==0.13.13
+huggingface_hub==1.16.4
+safetensors==0.7.0
+pytorch-lightning==2.6.5
+torchmetrics==1.9.0
+yacs==0.1.8
+nilearn==0.13.1
+nibabel==5.4.2
+pytest==9.1.1
+ruff==0.16.9

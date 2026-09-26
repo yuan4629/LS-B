@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Install ruff
+        run: pip install -c constraints.txt ruff
+      - name: Ruff
+        run: ruff check .
+      - name: Byte-compile
+        run: python -m compileall -q exp.py analyze_d2_split.py make_inr_split.py core baselines/bilora_adapter model_m tests
+      - name: Bash syntax
+        run: for f in run_d2.bash exp_timm.bash scripts/fetch_third_party.sh; do bash -n "$f"; done
+
+  test-core:
+    # Core dependencies only; checks that need the upstream BiLoRA checkout or data are skipped.
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install torch (CPU)
+        run: pip install -c constraints.txt torch torchvision --index-url https://download.pytorch.org/whl/cpu
+      - name: Install package (core + dev)
+        run: pip install -c constraints.txt -e ".[dev]"
+      - name: Tests
+        env:
+          CUDA_VISIBLE_DEVICES: ""
+        run: pytest -rs
+
+  test-optional:
+    # Optional dependencies (brain encoder) and the fetched third-party code.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Install torch (CPU)
+        run: pip install -c constraints.txt torch torchvision --index-url https://download.pytorch.org/whl/cpu
+      - name: Install package (core + brain + dev)
+        run: pip install -c constraints.txt -e ".[brain,dev]"
+      - name: Fetch third-party code
+        run: bash scripts/fetch_third_party.sh
+      - name: Import brain-encoder modules
+        run: python -c "import brainnet.config, brainnet.plmodel, brainnet.roi; import model_m.common.bioscore_v2"
+      - name: Tests
+        env:
+          CUDA_VISIBLE_DEVICES: ""
+        run: pytest -rs

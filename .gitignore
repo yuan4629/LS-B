@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Environment
+.env
+
+# Third-party code fetched by scripts/fetch_third_party.sh (not redistributed)
+/baselines/BiLoRA/
+/brainnet/
+/third_party/BrainDecodesDeepNets/
+
+# Data, weights and run outputs (see docs/DATASETS.md)
+/data/
+/subj01/
+/pretrained/
+/outputs/
+/logs/
